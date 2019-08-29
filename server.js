@@ -1,7 +1,8 @@
-const CardParser = require('vs-battle-tcg')
+const CardParser = require('vs-battle-character-to-tcg')
 const express = require('express')
 const app = express();
 const http = require('http').createServer(app);
+const PouchDBManager = require('./PouchDBManager')
 var io = require('socket.io')(http);
 
 app.use(express.static('client'))
@@ -15,10 +16,6 @@ io.on('connection', async function(socket){
   let cardData = await GetRandomCharacterCard(10)
   socket.emit('test-card-data',cardData)
 });
-
-CardParser.GetCardDataFromURL("https://vsbattles.fandom.com/wiki/Special:Random").then((result)=>{
-    console.log(result)
-})
 
 async function GetRandomCharacterCard(maxAttempts = 10){
   let attempt = 1

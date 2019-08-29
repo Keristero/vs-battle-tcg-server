@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "pouchdb": "^7.1.1",
+    "pouchdb-adapter-node-websql": "^7.0.0",
     "socket.io": "^2.2.0",
-    "vs-battle-tcg": "git+https://github.com/Keristero/vs-battle-character-to-tcg.git"
+    "vs-battle-character-to-tcg": "git+https://github.com/Keristero/vs-battle-character-to-tcg.git",
   }
 }
