@@ -30,3 +30,7 @@ async function GetRandomCharacterCard(maxAttempts = 10){
   }
   return null
 }
+
+GetRandomCharacterCard(10).then((data)=>{
+  PouchDBManager.AddCard(data)
+})
