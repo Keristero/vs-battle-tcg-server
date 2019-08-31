@@ -1,8 +1,10 @@
+console.log("loaded rendercard")
 class RenderCard{
     constructor(data,imgLoadedCallback){
         //parameters
         this.name = data.names[0].full
-        this.avatar = data.images[0].src
+        this.avatar = data.image
+        //Send request for image data
         this.origin = data.origin
         this.techniques = data.techniques
         //substitute technique values
@@ -70,8 +72,11 @@ class RenderCard{
 
         //avatar
         this.img_avatar = document.createElement("img")
-        this.img_avatar.src = this.avatar
         this.img_avatar.onload = imgLoadedCallback
+        axios.get(this.avatar).then((imgData)=>{
+            console.log('image',imgData)
+            this.img_avatar.src = imgData.data
+        })
 
         //footer
         this.footerHeight = 150
