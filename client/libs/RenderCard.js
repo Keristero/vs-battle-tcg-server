@@ -1,6 +1,7 @@
 console.log("loaded rendercard")
 class RenderCard{
-    constructor(data,imgLoadedCallback){
+    constructor(data,ctx){
+        this.ctx = ctx
         //parameters
         this.name = data.names[0].full
         this.avatar = data.image
@@ -60,9 +61,6 @@ class RenderCard{
         this.width = 400;
         this.height = 600;
         this.cornerRadius = 15;
-        this.backgroundColor = ctx.createLinearGradient(0,0,this.width,this.height);
-        this.backgroundColor.addColorStop(0,'rgb(0,0,0)'); 
-        this.backgroundColor.addColorStop(1,'rgb(100,100,100)'); 
 
         //title bar
         this.titleHeight = 50
@@ -72,7 +70,7 @@ class RenderCard{
 
         //avatar
         this.img_avatar = document.createElement("img")
-        this.img_avatar.onload = imgLoadedCallback
+        this.img_avatar.onload = ()=>{this.draw()}
         axios.get(this.avatar).then((imgData)=>{
             console.log('image',imgData)
             this.img_avatar.src = imgData.data
@@ -95,10 +93,6 @@ class RenderCard{
         this.flavorTextPaddingBottom = 5;
 
         //border
-        this.borderColor = ctx.createLinearGradient(0,0,this.width,this.height);
-        this.borderColor.addColorStop(0,'rgb(46,0,171)'); 
-        this.borderColor.addColorStop(0.5,'rgb(57,13,107)'); 
-        this.borderColor.addColorStop(1,'rgb(79,0,29)'); 
         this.borderWidth = 15
 
         //origin
@@ -132,44 +126,53 @@ class RenderCard{
         this.techDescriptColor = "rgb(200,200,200)"
         this.elementFont = '13px Courier New';
     }
-    draw(ctx){
+    draw(){
+        //Prep
+        this.backgroundColor = this.ctx.createLinearGradient(0,0,this.width,this.height);
+        this.backgroundColor.addColorStop(0,'rgb(0,0,0)'); 
+        this.backgroundColor.addColorStop(1,'rgb(100,100,100)'); 
+        this.borderColor = this.ctx.createLinearGradient(0,0,this.width,this.height);
+        this.borderColor.addColorStop(0,'rgb(46,0,171)'); 
+        this.borderColor.addColorStop(0.5,'rgb(57,13,107)'); 
+        this.borderColor.addColorStop(1,'rgb(79,0,29)'); 
+
         let innerCardWidth = this.width-(this.borderWidth*2)
         //Main card shape
-        drawRoundedRectangle(ctx,0,0,this.width,this.height,this.cornerRadius,this.backgroundColor)
+        drawRoundedRectangle(this.ctx,0,0,this.width,this.height,this.cornerRadius,this.backgroundColor)
 
-        ctx.globalCompositeOperation = "source-atop" //dont draw outside of card bounds
+        this.ctx.globalCompositeOperation = "source-atop" //dont draw outside of card bounds
         //card title
-        drawRectangle(ctx,0,0,this.width,this.titleHeight,this.titleBackgroundColor)
+        drawRectangle(this.ctx,0,0,this.width,this.titleHeight,this.titleBackgroundColor)
 
         //avatar
-        let avatar_bottom_y = drawImageXCentered(ctx,this.img_avatar,this.width/2,this.titleHeight,this.width,this.height-this.titleHeight)
+        let avatar_bottom_y = drawImageXCentered(this.ctx,this.img_avatar,this.width/2,this.titleHeight,this.width,this.height-this.titleHeight)
 
         //card title text
-        drawText(ctx,"center",this.titleTextColor,this.titleFont,this.name,this.width/2,(this.titleHeight/4)*3,innerCardWidth-80,undefined,2,'red')
+        drawText(this.ctx,"center",this.titleTextColor,this.titleFont,this.name,this.width/2,(this.titleHeight/4)*3,innerCardWidth-80,undefined,2,'red')
 
         //card footer
         this.footer_top_y = Math.max(Math.min(avatar_bottom_y,this.height-this.footerHeight),this.height/2)
-        drawRectangle(ctx,0,this.footer_top_y,this.width,this.height-this.footer_top_y,this.footerBackgroundColor)
+        drawRectangle(this.ctx,0,this.footer_top_y,this.width,this.height-this.footer_top_y,this.footerBackgroundColor)
 
         //classifications
-        drawText(ctx,"left",this.classificationsTextColor,this.flavourTextFont,this.classifications,this.classifications_xOffset,this.footer_top_y+this.classifications_yOffset,innerCardWidth,this.originY-this.flavorTextPaddingBottom)
+        drawText(this.ctx,"left",this.classificationsTextColor,this.flavourTextFont,this.classifications,this.classifications_xOffset,this.footer_top_y+this.classifications_yOffset,innerCardWidth,this.originY-this.flavorTextPaddingBottom)
 
         //flavor text
         let wordWrappedText = wordWrap(this.flavourText,40)
-        drawText(ctx,"center",this.flavourTextColor,this.flavourTextFont,wordWrappedText,this.width/2,this.footer_top_y+this.flavourText_yOffset,innerCardWidth,this.originY-this.flavorTextPaddingBottom)
+        drawText(this.ctx,"center",this.flavourTextColor,this.flavourTextFont,wordWrappedText,this.width/2,this.footer_top_y+this.flavourText_yOffset,innerCardWidth,this.originY-this.flavorTextPaddingBottom)
 
         //draw counters
         for(let counterName in this.counters){
             let counter = this.counters[counterName]
-            counter.draw(ctx)
+            counter.draw(this.ctx)
         }
 
         //card border
-        drawRoundedRectangle(ctx,0,0,this.width,this.height,this.cornerRadius,undefined,this.borderColor,this.borderWidth)
+        drawRoundedRectangle(this.ctx,0,0,this.width,this.height,this.cornerRadius,undefined,this.borderColor,this.borderWidth)
 
         //origin text
-        drawRectangle(ctx,this.originX,this.originY,this.originWidth,this.originHeight,this.borderColor)
-        drawText(ctx,"center",this.originTextColor,this.originFont,this.origin,this.width/2,this.originTextY,this.originWidth-6)
+        drawRectangle(this.ctx,this.originX,this.originY,this.originWidth,this.originHeight,this.borderColor)
+        drawText(this.ctx,"center",this.originTextColor,this.originFont,this.origin,this.width/2,this.originTextY,this.originWidth-6)
 
         let techIndex = 0
         for(let technique of this.techniques){
@@ -177,9 +180,9 @@ class RenderCard{
             let offset = (this.techHeight+3)*techIndex
             let x = 10
             let y = (this.footer_top_y-this.techHeight)-offset
-            drawRoundedRectangle(ctx,x,y,this.techWidth,this.techHeight,10,"rgba(0,0,0,0.5)")
+            drawRoundedRectangle(this.ctx,x,y,this.techWidth,this.techHeight,10,"rgba(0,0,0,0.5)")
             //draw title
-            drawText(ctx,"left",technique.view.title_font_color,this.techTitleFont,technique.title,x+5,y+15,this.techWidth/1.5,9999,5,technique.view.title_font_shadow)
+            drawText(this.ctx,"left",technique.view.title_font_color,this.techTitleFont,technique.title,x+5,y+15,this.techWidth/1.5,9999,5,technique.view.title_font_shadow)
             //draw elements
             let i = 0
             for(let element of technique.elements){
@@ -188,22 +191,22 @@ class RenderCard{
                 let x = (this.width-54)-(w+2)*i
                 let color = elementalColors[element].color
                 console.log(color)
-                drawRoundedRectangle(ctx,x,y,w,h,3,color)
-                drawText(ctx,"center","white",this.elementFont,element,x+w/2,y+12,w-5,undefined,3,"black")
+                drawRoundedRectangle(this.ctx,x,y,w,h,3,color)
+                drawText(this.ctx,"center","white",this.elementFont,element,x+w/2,y+12,w-5,undefined,3,"black")
                 i++
             }
             //draw cost
             let costWidth = 50
             let costX = this.width-costWidth-14
             let costY = y+18
-            drawRoundedRectangle(ctx,costX,costY,costWidth,18,2,"rgba(0,0,0,0.7)")
-            drawText(ctx,"center","white",this.elementFont,`${technique.cost} mana`,costX+costWidth/2,costY+13,costWidth-4,undefined,5,"blue")
+            drawRoundedRectangle(this.ctx,costX,costY,costWidth,18,2,"rgba(0,0,0,0.7)")
+            drawText(this.ctx,"center","white",this.elementFont,`${technique.cost} mana`,costX+costWidth/2,costY+13,costWidth-4,undefined,5,"blue")
             //draw description
-            drawText(ctx,"left",technique.view.title_font_color,this.techDescriptFont,technique.description,x+5,y+30,this.techWidth/1.3)
+            drawText(this.ctx,"left",technique.view.title_font_color,this.techDescriptFont,technique.description,x+5,y+30,this.techWidth/1.3)
             techIndex++
         }
 
-        ctx.globalCompositeOperation = "source-over"
+        this.ctx.globalCompositeOperation = "source-over"
     }
 }
 
@@ -227,7 +230,7 @@ class RenderCounter{
     }
     draw(ctx){
         if(!this.fillColor){
-            this.fillColor = this.generateGradient(this.obj_rgb);
+            this.fillColor = this.generateGradient(this.obj_rgb,ctx);
         }
         //Determine font color
         let textColor = "white"
@@ -240,7 +243,7 @@ class RenderCounter{
 
         drawText(ctx,"center",textColor,this.font,`${this.currentValue}`,this.x+(this.w/2),this.y+(this.h/2)+this.textYOffset,this.w,undefined,6)
     }
-    generateGradient(rgb){
+    generateGradient(rgb,ctx){
         let r = rgb.r;
         let g = rgb.g;
         let b = rgb.b;

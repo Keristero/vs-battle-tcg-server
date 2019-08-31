@@ -20,8 +20,9 @@ function emitCompressed(socket,topic,data){
 
 io.on('connection', async function(socket){
   let cardDocument = await PouchDBManager.GetRandomCardDocument()
-  //console.log('CARDDATA',cardDocument)
   emitCompressed(socket,'test-card-document',cardDocument)
+  let allCardDocs = await PouchDBManager.GetAllCards(0,300)
+  emitCompressed(socket,'card-list',allCardDocs)
 });
 
 //Used by the clients to load all images, uses request so that it can be cached
@@ -44,7 +45,10 @@ async function GetRandomCharacterCard(maxAttempts = 10){
   return null
 }
 
-
-GetRandomCharacterCard(10).then(async(data)=>{
-  await PouchDBManager.AddCard(data)
-})
+/*
+setInterval(()=>{
+  GetRandomCharacterCard(10).then(async(data)=>{
+    await PouchDBManager.AddCard(data)
+  })
+},1500)
+*/

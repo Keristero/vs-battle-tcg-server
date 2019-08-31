@@ -36,6 +36,7 @@ class PouchDBManager {
     }
     async _InitIndexes(){
         this.db.createIndex({index: {fields: ['card_number']}});
+        this.db.createIndex({index: {fields: ['type']}});
         return;
     }
     async _PutData(typeName,attributes,id,existingDoc,attachments){
@@ -58,6 +59,7 @@ class PouchDBManager {
     async _SaveMetadata(){
         console.log("PouchDBManager Saving Metadata")
         await this.db.put(this._metadata)
+        await this._LoadMetadata()
     }
     async _LoadMetadata(){
         console.log("PouchDBManager Loading Metadata")
@@ -108,14 +110,32 @@ class PouchDBManager {
         }
         try{
             documentAttributes.card_number = this._metadata.total_cards
-            this._PutData(TYPES.CARD,documentAttributes,uniqueID,existingDoc,attachments)
-            this._metadata.total_cards++
-            await this._SaveMetadata()
+            await this._PutData(TYPES.CARD,documentAttributes,uniqueID,existingDoc,attachments)
+            try{
+                this._metadata.total_cards++
+                await this._SaveMetadata()
+            }catch(e){
+                console.log(e)
+            }
         }catch(e){
             console.log(e)
         }
     }
+    async GetAllCards(firstCard = 0,limitCards = 5){
+        console.warn("PouchDBManager Getting all Cards")
+        let result = await this.db.find({
+            selector:{
+                type:{$eq: TYPES.CARD},
+                card_number:{$gte: firstCard},
+                card_number:{$lt: firstCard+limitCards},
+            },
+            sort:['card_number'],
+        })
+        console.log("All cards!",result)
+        return result
+    }
     async GetRandomCardDocument(){
+        console.log("PouchDBManager Getting Random Card")
         let i = RNG(0,this._metadata.total_cards-1)
         let result = await this.db.find({selector:{card_number:{$eq: i}}})
         let carDoc = result.docs[0]
