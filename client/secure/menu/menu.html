@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="../../public/coreStyles.css">
+        <link rel="stylesheet" type="text/css" href="./menu.css">
+        <script src="../../public/libs/axios.min.js"></script>
+    </head>
+    <body class="container">
+        <div class="item title">
+            <h1>Menu</h1>
+        </div>
+        <script>
+            axios.get('/public/templates/navigationBar.html')
+            .then((response)=>{
+                let templateDiv = document.createElement("div")
+                templateDiv.innerHTML = response.data
+                document.body.appendChild(templateDiv)
+            })
+        </script>
+    </body>
+</html>

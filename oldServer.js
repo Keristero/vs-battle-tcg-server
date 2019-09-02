@@ -3,6 +3,7 @@ const express = require('express')
 const app = express();
 const http = require('http').createServer(app);
 const PouchDBManager = require('./PouchDBManager')
+// @ts-ignore
 const jsonpack = require('jsonpack/main')
 var io = require('socket.io')(http);
 
@@ -25,7 +26,14 @@ io.on('connection', async function(socket){
   emitCompressed(socket,'card-list',allCardDocs)
 });
 
-//Used by the clients to load all images, uses request so that it can be cached
+
+app.get('/card/random/',async(req,res)=>{
+  let cardDocument = await PouchDBManager.GetRandomCardDocument()
+  let compressed = jsonpack.pack(cardDocument)
+  res.send(compressed)
+})
+
+//API for any document attachment
 app.get('/attachment/:docId/:attachmentId',async(req,res)=>{
   let attachment = await PouchDBManager.GetDocumentAttachment(req.params.docId,req.params.attachmentId)
   res.send(attachment)

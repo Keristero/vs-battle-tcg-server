@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="../coreStyles.css">
+        <link rel="stylesheet" type="text/css" href="./login.css">
+        <script src="../../public/libs/axios.min.js"></script>
+    </head>
+    <body class="container">
+        <div class="item title">
+            <h1>Login</h1>
+        </div>
+        <div class="item login">
+            <script>
+                axios.get('/public/templates/navigationBar.html')
+                .then((response)=>{
+                    let templateDiv = document.createElement("div")
+                    templateDiv.innerHTML = response.data
+                    document.body.appendChild(templateDiv)
+                })
+            </script>
+            <form id="loginformA" action="" method="post">
+                <label for="txt_username">Username: </label><br>
+                <input type="text" id="txt_username" name="username"><br>
+                <label for="txt_password">Password: </label><br>
+                <input type="password" id="txt_password" name="password"><br>
+                <input type="submit" value="Submit"></input>
+            </form>
+            <script>
+                let urlParams = {}
+                let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                    urlParams[key] = value.replace(/%20/g," ");
+                });
+                console.log(urlParams)
+                if(urlParams.mesg){
+                    let div_err = document.createElement("div")
+                    div_err.setAttribute("class","item")
+                    div_err.innerHTML = urlParams.mesg
+                    document.getElementsByClassName("login")[0].appendChild(div_err)
+                }
+            </script>
+        </div>
+    </body>
+</html>

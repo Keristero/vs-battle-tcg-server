@@ -61,7 +61,7 @@ function drawImageXCentered(ctx,img,x,y,maxWidth,maxHeight){
     // get the scale
     var scale = Math.min(maxWidth / img.width, maxHeight / img.height);
     // get the top left position of the image
-    var x = (maxWidth / 2) - (img.width / 2) * scale;
+    x = (maxWidth / 2) - (img.width / 2) * scale;
     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
     return y+(img.height*scale)
 }
@@ -94,3 +94,21 @@ function testWhite(x) {
     var white = new RegExp(/^\s$/);
     return white.test(x.charAt(0));
 };
+
+function CreateCard(document){
+    const cardData = document.data
+    const documentID = document._id
+    cardData.image = `/attachment/${documentID}/image`
+    const ctx = CreateCanvasCtx(400,600,document.card_number)
+    card = new RenderCard(cardData,ctx)
+}
+
+function CreateCanvasCtx(width,height,id){
+    let canvas = document.createElement("canvas")
+    canvas.width = width;
+    canvas.height = height;
+    canvas.id = id;
+    document.body.appendChild(canvas)
+    let ctx = canvas.getContext('2d')
+    return ctx
+}

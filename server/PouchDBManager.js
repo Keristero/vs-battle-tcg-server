@@ -2,11 +2,11 @@ const PouchDB = require('pouchdb');
 PouchDB.plugin(require('pouchdb-find'));
 PouchDB.plugin(require('pouchdb-adapter-node-websql'));
 const crypto = require('crypto');
-const RNG = require('./helpers').RNG
+const {RNG,GenerateSalt,SaltAndHashPassword} = require('./helpers')
 //For debugging
 var pouchdbDebug = require('pouchdb-debug');
 PouchDB.plugin(pouchdbDebug);
-//PouchDB.debug.enable('*');
+//PouchDB.debug.enable('pouchdb:api');
 
 /* Key Documents */
 /*
@@ -15,7 +15,8 @@ PouchDB.plugin(pouchdbDebug);
 
 const TYPES = {
     CARD:"card",
-    METADATA:"metadata"
+    METADATA:"metadata",
+    USER:"user"
 }
 
 const STATICID = {
@@ -31,6 +32,7 @@ class PouchDBManager {
         this.db = new PouchDB('./databases/pouch.db', { adapter: 'websql' });
         await this._LoadMetadata()
         await this._InitIndexes()
+        await this._InitTestUsers()
         this.ready = true
         return;
     }
@@ -39,7 +41,60 @@ class PouchDBManager {
         this.db.createIndex({index: {fields: ['type']}});
         return;
     }
-    async _PutData(typeName,attributes,id,existingDoc,attachments){
+    async _InitTestUsers(){
+        try{
+            await this.CreateUser("user","user")
+            console.log(`PouchDBManager Created test users`)
+        }catch(e){
+            console.log(e)
+        }
+    }
+    async CreateUser(username,password){
+        try {
+            let existingUser = await this.GetUserDocument(username)
+            console.log("Existing user",existingUser)
+            if(existingUser){
+                throw(`User with name ${username} already exists`)
+            }
+            let salt = GenerateSalt(16)
+            let newUserDocument = {
+                _id:`user_${username}`,
+                _rev:null,
+                type:TYPES.USER,
+                salt:salt,
+                password:SaltAndHashPassword(password,salt)
+            }
+            this.db.put(newUserDocument)
+        }catch(err){
+            throw(err)
+        }
+    }
+    async GetUserDocument(username){
+        try {
+            let result = await this.db.find({
+                selector: {
+                    _id: {
+                        $eq: `user_${username}`
+                    },
+                    type: {
+                        $eq: TYPES.USER
+                    }
+                }
+            });
+            let user = false
+            if(result.docs[0]){
+                user = result.docs[0]
+            }
+            return user
+        }catch(err){
+            throw(err)
+        }
+    }
+    async GetDocumentAttachment(docId,attachmentId){
+        let attachment = await this.db.getAttachment(docId,attachmentId);
+        return attachment
+    }
+    async PutData(typeName,attributes,id,existingDoc,attachments){
         console.log(`PouchDBManager Putting ${typeName}`)
         //Create default doc
         let document = {
@@ -110,7 +165,7 @@ class PouchDBManager {
         }
         try{
             documentAttributes.card_number = this._metadata.total_cards
-            await this._PutData(TYPES.CARD,documentAttributes,uniqueID,existingDoc,attachments)
+            await this.PutData(TYPES.CARD,documentAttributes,uniqueID,existingDoc,attachments)
             try{
                 this._metadata.total_cards++
                 await this._SaveMetadata()
@@ -141,10 +196,6 @@ class PouchDBManager {
         let carDoc = result.docs[0]
         console.log(`got card ${i}`)
         return carDoc
-    }
-    async GetDocumentAttachment(docId,attachmentId){
-        let attachment = await this.db.getAttachment(docId,attachmentId);
-        return attachment
     }
 }
 
