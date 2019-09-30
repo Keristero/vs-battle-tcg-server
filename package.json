@@ -12,6 +12,7 @@
   "dependencies": {
     "avsc": "^5.4.13",
     "axios": "^0.19.0",
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
     "jsonpack": "^1.1.5",

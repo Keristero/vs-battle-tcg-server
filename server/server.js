@@ -2,6 +2,7 @@
 const config = require("./config.json")
 const express = require("express");
 const session = require('express-session')
+const jsonpack = require('jsonpack/main')
 const url = require('url');
 const fs = require('fs')
 const bodyParser = require('body-parser');
@@ -10,7 +11,9 @@ const http = require('http')
 const https = require('https')
 const path = require('path')
 const PouchDBManager = require('./PouchDBManager.js')
+const UserCollectionManager = require('./UserCollectionManager.js')
 const {RNG,GenerateSalt,SaltAndHashPassword} = require('./helpers')
+const CardParser = require('vs-battle-character-to-tcg')
 let productionEnvironment = false
 console.log(`productionEnvironment = ${productionEnvironment}`)
 
@@ -98,6 +101,34 @@ app.get('/', (req, res) => {
     res.redirect(url.format({pathname:PATH_LOGIN}));
   }
 });
+
+async function GetRandomCharacterCard(maxAttempts = 10){
+  let attempt = 1
+  let cardData
+  while(attempt <= maxAttempts){
+    try{
+      let cardData = await CardParser.GetCardDataFromURL("https://vsbattles.fandom.com/wiki/Special:Random")
+      return cardData
+    }catch(e){
+      attempt++
+    }
+  }
+  return null
+}
+
+app.get('/card/random/new',async(req,res)=>{
+  let newCardData = await GetRandomCharacterCard()
+  let cardHash = await PouchDBManager.AddCard(newCardData)
+  let cardDocument = await PouchDBManager.GetCardDocumentByHash(cardHash)
+  let compressed = jsonpack.pack(cardDocument)
+  res.send(compressed)
+})
+
+//API for any document attachment
+app.get('/attachment/:docId/:attachmentId',async(req,res)=>{
+  let attachment = await PouchDBManager.GetDocumentAttachment(req.params.docId,req.params.attachmentId)
+  res.send(attachment)
+})
 
 io.on('connection', async(socket)=>{
   console.log("socket.io connection")

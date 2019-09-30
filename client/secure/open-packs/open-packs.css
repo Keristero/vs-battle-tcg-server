@@ -1,22 +1,10 @@
 .title { grid-area: titl; }
 .navigation { grid-area: navi; }
 
-/*For aspect ratios smaller than 4:3*/
-@media (max-aspect-ratio: 4/3) {
-    .container{
-        grid-template-areas:
-        'titl'
-        'navi'
-    }
-}
-  
-/*For aspect ratios greater than 4:3*/
-@media (min-aspect-ratio: 4/3) {
-    .container{
-        grid-template-areas:
-        '. titl titl titl titl .'
-        '. navi navi navi navi .'
-    }
+.container{
+    grid-template-areas:
+    'titl'
+    'navi'
 }
 
 input{

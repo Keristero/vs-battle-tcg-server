@@ -1,5 +1,5 @@
 // @ts-ignore
-axios.get(`/card/random/`).then((response)=>{
+axios.get(`/card/random/new`).then((response)=>{
     let cardDocumentCompressed = response.data
     console.log('cardDocumentCompressed',cardDocumentCompressed)
     // @ts-ignore

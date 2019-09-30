@@ -2,6 +2,7 @@ const PouchDB = require('pouchdb');
 PouchDB.plugin(require('pouchdb-find'));
 PouchDB.plugin(require('pouchdb-adapter-node-websql'));
 const crypto = require('crypto');
+const path = require('path')
 const {RNG,GenerateSalt,SaltAndHashPassword} = require('./helpers')
 //For debugging
 var pouchdbDebug = require('pouchdb-debug');
@@ -29,7 +30,7 @@ class PouchDBManager {
         this._Init()
     }
     async _Init(){
-        this.db = new PouchDB('./databases/pouch.db', { adapter: 'websql' });
+        this.db = new PouchDB(path.join(__dirname,'..','databases','pouch.db'), { adapter: 'websql' });
         await this._LoadMetadata()
         await this._InitIndexes()
         await this._InitTestUsers()
@@ -172,9 +173,11 @@ class PouchDBManager {
             }catch(e){
                 console.log(e)
             }
+            return uniqueID
         }catch(e){
             console.log(e)
         }
+        return null
     }
     async GetAllCards(firstCard = 0,limitCards = 5){
         console.warn("PouchDBManager Getting all Cards")
@@ -196,6 +199,15 @@ class PouchDBManager {
         let carDoc = result.docs[0]
         console.log(`got card ${i}`)
         return carDoc
+    }
+    async GetCardDocumentByHash(hash){
+        let cardDoc = null
+        try{
+            cardDoc = await this.db.get(hash)
+        }catch(e){
+            console.log(e)
+        }
+        return cardDoc
     }
 }
 
